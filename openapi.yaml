@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Payment Service
+  description: Processes payments for the K11 platform. Consumes user-service and order-service.
+  version: 1.0.0
+paths:
+  /api/v1/payments:
+    post:
+      summary: Initiate a payment
+      operationId: create_payment
+      tags: [payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePayment'
+      responses:
+        '201':
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '422':
+          description: User or order not found
+  /api/v1/payments/{id}:
+    get:
+      summary: Get a payment by ID
+      operationId: get_payment
+      tags: [payments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          description: Payment not found
+components:
+  schemas:
+    Payment:
+      type: object
+      required: [id, user_id, order_id, amount, currency, status]
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+          description: Validated via user-service GET /api/v2/users/{id}
+        order_id:
+          type: string
+          description: Validated via order-service GET /api/v1/orders/{id}
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          default: USD
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, refunded]
+    CreatePayment:
+      type: object
+      required: [user_id, order_id, amount]
+      properties:
+        user_id:
+          type: string
+        order_id:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          default: USD
